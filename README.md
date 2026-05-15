@@ -3,7 +3,7 @@
 </a>
 </div>
 
-<p align="center"><img src="https://user-images.githubusercontent.com/25067102/153943381-3ac38273-0195-4206-812a-201dc075c177.png" /></p>
+<p align="center"><img src="build/icons/256x256.png" /></p>
 
 # <p align="center">ExesDeskCut</p>
 An easy to use app that lets you create Windows Exes Desktop Shortcuts (.desktop files) on Linux without requiring to mess with `.desktop` files!   
