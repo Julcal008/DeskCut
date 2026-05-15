@@ -4,6 +4,10 @@ const { format } = require("url");
 const { exec, spawn } = require("child_process");
 const fs = require("fs");
 
+function quoteDesktopExecArg(arg) {
+  return `"${arg.replace(/(["\\$`])/g, "\\$1")}"`;
+}
+
 // Packages
 const { BrowserWindow, app, ipcMain } = require("electron");
 const isDev = require("electron-is-dev");
@@ -41,11 +45,15 @@ app.on("window-all-closed", app.quit);
 // listen the channel `message` and resend the received message to the renderer process
 ipcMain.on("message", (event, message) => {
   console.log(message);
+  const desktopCommand = `sh -c 'winecfg && wine "$@"' dummy ${quoteDesktopExecArg(
+    message.exec
+  )}`;
+
   let text = `[Desktop Entry]
 Encoding=UTF-8
 Name=${message.name}
 Comment=${message.comment}
-Exec=wine "${message.exec}"
+Exec=${desktopCommand}
 Icon=${message.icon}
 Terminal=${message.terminal}
 Type=Application
