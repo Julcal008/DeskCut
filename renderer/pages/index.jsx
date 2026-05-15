@@ -12,6 +12,7 @@ const Home = () => {
   const [loadedIcon, setLoadedIcon] = useState(false);
   const [customExec, setCustomExec] = useState(false);
   const [terminal, setTerminal] = useState(false);
+  const [runWineCfg, setRunWineCfg] = useState(false);
   const [error, setError] = useState(false);
   const [showWineInstaller, setShowWineInstaller] = useState(false);
   const [installingWine, setInstallingWine] = useState(false);
@@ -66,7 +67,7 @@ const Home = () => {
     if (!isValid) {
       alert("Please enter the values correctly");
     } else {
-      window.electron.message(input);
+      window.electron.message({ ...input, runWineCfg });
       alert("Shortcut Successfully Created!");
     }
   };
@@ -184,12 +185,52 @@ const Home = () => {
           )}
         </button>
 
+        {/* Run winecfg once before launch */}
+        <button
+          type="button"
+          className={`${runWineCfg ? "checkbox-on" : "checkbox-off"} checkbox-bg animate`}
+          onClick={() => setRunWineCfg(!runWineCfg)}
+        >
+          <p className="flex-grow">Run winecfg once before launch</p>
+
+          {!runWineCfg ? (
+            <div>
+              <svg
+                className="text-xl"
+                stroke="currentColor"
+                fill="currentColor"
+                strokeWidth="0"
+                viewBox="0 0 24 24"
+                height="1em"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M7,5C5.897,5,5,5.897,5,7v10c0,1.103,0.897,2,2,2h10c1.103,0,2-0.897,2-2V7c0-1.103-0.897-2-2-2H7z M7,17V7h10l0.002,10H7z"></path>
+              </svg>
+            </div>
+          ) : (
+            <div>
+              <svg
+                className="text-xl"
+                stroke="currentColor"
+                fill="currentColor"
+                strokeWidth="0"
+                viewBox="0 0 24 24"
+                height="1em"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M9 9H15V15H9z"></path>
+                <path d="M19,17V7c0-1.103-0.897-2-2-2H7C5.897,5,5,5.897,5,7v10c0,1.103,0.897,2,2,2h10C18.103,19,19,18.103,19,17z M7,7h10 l0.002,10H7V7z"></path>
+              </svg>
+            </div>
+          )}
+        </button>
+
         {/* Custom Exec Checkbox */}
         <button
           type="button"
-          className={`${
-            customExec ? "checkbox-on" : "checkbox-off"
-          } checkbox-bg animate`}
+          className={`${customExec ? "checkbox-on" : "checkbox-off"} checkbox-bg animate`}
           onClick={() => setCustomExec(!customExec)}
         >
           <p className="flex-grow">Use Custom Icon & Command</p>

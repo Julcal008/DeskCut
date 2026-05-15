@@ -4,8 +4,34 @@ const { format } = require("url");
 const { exec, spawn } = require("child_process");
 const fs = require("fs");
 
-function quoteDesktopExecArg(arg) {
-  return `"${arg.replace(/(["\\$`])/g, "\\$1")}"`;
+function escapeDesktopExecArg(arg) {
+  return arg
+    .replace(/\\/g, "\\\\")
+    .replace(/ /g, "\\ ")
+    .replace(/"/g, '\\"');
+}
+
+function writeWineLauncher(name, targetExe) {
+  const safeName = name.replace(/[^A-Z0-9]+/gi, "_");
+  const launcherDir = join(app.getPath("userData"), "launchers");
+  fs.mkdirSync(launcherDir, { recursive: true });
+
+  const launcherPath = join(launcherDir, `${safeName}.sh`);
+  const cacheDir = process.env.XDG_CACHE_HOME || join(app.getPath("home"), ".cache");
+  const script = `#!/bin/sh
+CACHE_DIR="${cacheDir}/ExesDeskCut"
+mkdir -p "$CACHE_DIR"
+MARKER="$CACHE_DIR/.winecfg-ran"
+if [ ! -f "$MARKER" ]; then
+  winecfg && touch "$MARKER"
+fi
+wine "$@"
+`;
+
+  fs.writeFileSync(launcherPath, script, "utf-8");
+  fs.chmodSync(launcherPath, 0o755);
+
+  return launcherPath;
 }
 
 // Packages
@@ -45,9 +71,16 @@ app.on("window-all-closed", app.quit);
 // listen the channel `message` and resend the received message to the renderer process
 ipcMain.on("message", (event, message) => {
   console.log(message);
-  const desktopCommand = `sh -c 'winecfg && wine "$@"' dummy ${quoteDesktopExecArg(
-    message.exec
-  )}`;
+
+  let desktopCommand;
+  if (message.runWineCfg) {
+    const launcherPath = writeWineLauncher(message.name, message.exec);
+    desktopCommand = `${escapeDesktopExecArg(launcherPath)} ${escapeDesktopExecArg(
+      message.exec
+    )}`;
+  } else {
+    desktopCommand = `wine ${escapeDesktopExecArg(message.exec)}`;
+  }
 
   let text = `[Desktop Entry]
 Encoding=UTF-8
