@@ -6,7 +6,7 @@ const MyApp = ({ Component, pageProps }) => {
   return (
     <>
       <Head>
-        <title>DeskCut</title>
+        <title>ExesDeskCut</title>
       </Head>
       <ThemeProvider
         attribute="class"

@@ -1,15 +1,19 @@
 {
-  "name": "deskcut",
+  "name": "exesdeskcut",
   "private": true,
   "version": "1.5.1",
-  "productName": "DeskCut",
-  "author": "Nayam Amarshe <nayam@nay.am>",
-  "email": "nay@am.com",
+  "productName": "ExesDeskCut",
+  "originalauthor": "Nayam Amarshe <nayam@nay.am>",
+  "newauthor": "julipro",
+  "email_originalauthor": "nay@am.com",
+  "email_newauthor": "julcalderon3008@gmail.com",
   "license": "GPLv2",
-  "description": "DeskCut is an extremely easy to use desktop shortcut creator app for Linux",
+  "description": "ExesDeskCut is an extremely easy to use Windows desktop shortcut creator app for Linux",
   "keywords": [
     "Linux",
     "Gnome",
+    "KDE",
+    "ExesFiles",
     "Desktop",
     "Shortcut"
   ],
@@ -22,8 +26,8 @@
     "dist": "npm run build && electron-builder"
   },
   "build": {
-    "productName": "DeskCut",
-    "appId": "com.nayam.deskcut",
+    "productName": "ExesDeskCut",
+    "appId": "com.julipro.exesdeskcut",
     "asar": true,
     "linux": {
       "target": [
