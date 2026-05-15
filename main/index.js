@@ -1,7 +1,7 @@
 // Native
 const { join } = require("path");
 const { format } = require("url");
-const { exec } = require("child_process");
+const { exec, spawn } = require("child_process");
 const fs = require("fs");
 
 // Packages
@@ -80,24 +80,30 @@ Categories=GNOME;Application;Utility;Game;
   }
 });
 
-ipcMain.on("install-wine", (event, distro) => {
-  let command;
+ipcMain.on("install-wine", (event, payload) => {
+  // payload can be either a string (distro) or an object { distro, password }
+  const { distro, password } =
+    typeof payload === "object" && payload !== null
+      ? { distro: payload.distro, password: payload.password }
+      : { distro: payload, password: null };
+
+  let commandsWithoutSudo;
 
   switch (distro) {
     case "ubuntu-debian":
-      command = "sudo apt update && sudo apt install -y wine wine64 wine32";
+      commandsWithoutSudo = "apt update && apt install -y wine wine64 wine32";
       break;
     case "arch":
-      command = "sudo pacman -Sy --noconfirm wine";
+      commandsWithoutSudo = "pacman -Sy --noconfirm wine";
       break;
     case "redhat":
-      command = "sudo dnf install -y wine";
+      commandsWithoutSudo = "dnf install -y wine";
       break;
     default:
-      command = null;
+      commandsWithoutSudo = null;
   }
 
-  if (!command) {
+  if (!commandsWithoutSudo) {
     event.sender.send("install-wine-result", {
       success: false,
       error: "Unsupported distro family.",
@@ -105,19 +111,91 @@ ipcMain.on("install-wine", (event, distro) => {
     return;
   }
 
-  exec(command, { shell: "/bin/bash" }, (error, stdout, stderr) => {
-    if (error) {
+  // If password provided, use sudo -S and write password to stdin. Otherwise run sudo which may fail without a tty.
+  if (password) {
+    const child = spawn("sudo", ["-S", "bash", "-lc", commandsWithoutSudo], {
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (d) => (stdout += d.toString()));
+    child.stderr.on("data", (d) => (stderr += d.toString()));
+
+    child.on("close", (code) => {
+      const ttyRegex = /no tty present|a terminal is required|sudo:.*password is required/i;
+      if (code !== 0) {
+        if (ttyRegex.test(stderr)) {
+          event.sender.send("install-wine-result", {
+            success: false,
+            error:
+              "Installation requires a terminal for entering your sudo password. Run the installer from a terminal or configure passwordless sudo for your user.",
+            stderr,
+          });
+        } else {
+          event.sender.send("install-wine-result", {
+            success: false,
+            error: `Install command exited with code ${code}`,
+            stderr,
+            stdout,
+          });
+        }
+        return;
+      }
+
+      event.sender.send("install-wine-result", {
+        success: true,
+        stdout,
+      });
+    });
+
+    // write password (sudo -S reads from stdin)
+    try {
+      child.stdin.write(password + "\n");
+      child.stdin.end();
+    } catch (e) {
       event.sender.send("install-wine-result", {
         success: false,
-        error: error.message,
-        stderr,
+        error: "Failed to send password to sudo process.",
       });
-      return;
     }
+  } else {
+    // No password provided: run sudo via shell (will fail if sudo requires a tty)
+    const fullCommand = `sudo bash -lc \"${commandsWithoutSudo.replace(/"/g, '\\"')}\"`;
+    const child = spawn("/bin/bash", ["-lc", fullCommand], { stdio: ["ignore", "pipe", "pipe"] });
 
-    event.sender.send("install-wine-result", {
-      success: true,
-      stdout,
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (d) => (stdout += d.toString()));
+    child.stderr.on("data", (d) => (stderr += d.toString()));
+
+    child.on("close", (code) => {
+      const ttyRegex = /no tty present|a terminal is required|sudo:.*password is required/i;
+      if (code !== 0) {
+        if (ttyRegex.test(stderr)) {
+          event.sender.send("install-wine-result", {
+            success: false,
+            error:
+              "Installation requires a terminal for entering your sudo password. Run the installer from a terminal or configure passwordless sudo for your user.",
+            stderr,
+          });
+        } else {
+          event.sender.send("install-wine-result", {
+            success: false,
+            error: `Install command exited with code ${code}`,
+            stderr,
+            stdout,
+          });
+        }
+        return;
+      }
+
+      event.sender.send("install-wine-result", {
+        success: true,
+        stdout,
+      });
     });
-  });
+  }
 });

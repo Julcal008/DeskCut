@@ -15,6 +15,8 @@ const Home = () => {
   const [error, setError] = useState(false);
   const [showWineInstaller, setShowWineInstaller] = useState(false);
   const [installingWine, setInstallingWine] = useState(false);
+  const [provideSudoPassword, setProvideSudoPassword] = useState(false);
+  const [sudoPassword, setSudoPassword] = useState("");
   const [darkMode, setDarkMode] = useState(false);
   const [version, setVersion] = useState("");
   const [input, setInput] = useState({
@@ -43,12 +45,12 @@ const Home = () => {
     if (updateJson) {
       if (
         updateJson.version >
-        navigator.userAgent.match(/DeskCut\/([\d\.]+\d+)/)[1]
+        navigator.userAgent.match(/ExesDeskCut\/([\d\.]+\d+)/)[1]
       ) {
         const confirmText = "Update available! Download now?";
         if (confirm(confirmText) == true) {
           window.open(
-            "https://github.com/NayamAmarshe/DeskCut/releases/",
+            "https://github.com/Julcal008/ExesDeskCut/releases",
             "_blank"
           );
         }
@@ -76,7 +78,14 @@ const Home = () => {
   const chooseWineDistro = (distro) => {
     setShowWineInstaller(false);
     setInstallingWine(true);
-    window.electron.installWine(distro);
+    const payload = {
+      distro,
+      password: provideSudoPassword ? sudoPassword : null,
+    };
+    window.electron.installWine(payload);
+    // clear password after sending
+    setSudoPassword("");
+    setProvideSudoPassword(false);
   };
 
   useEffect(() => {
@@ -94,7 +103,7 @@ const Home = () => {
     <div className="flex h-screen flex-col items-center justify-center bg-slate-50 dark:bg-gray-800">
       {/* Heading */}
       <h1 className="pt-5 text-2xl font-bold text-slate-600 dark:text-slate-100">
-        DeskCut
+        ExesDeskCut
       </h1>
       <p className="pb-2 text-sm leading-tight text-slate-400">
         Shortcut Creator
@@ -323,6 +332,25 @@ const Home = () => {
             <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">
               Select the Linux family so Wine installs with the correct package manager.
             </p>
+            <div className="mb-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={provideSudoPassword}
+                  onChange={(e) => setProvideSudoPassword(e.target.checked)}
+                />
+                <span className="text-sm">Provide sudo password (optional)</span>
+              </label>
+              {provideSudoPassword && (
+                <input
+                  type="password"
+                  placeholder="Your sudo password"
+                  value={sudoPassword}
+                  onChange={(e) => setSudoPassword(e.target.value)}
+                  className="mt-2 w-full rounded-md border p-2"
+                />
+              )}
+            </div>
             <div className="space-y-3">
               <button
                 type="button"
