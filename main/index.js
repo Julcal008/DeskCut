@@ -53,15 +53,13 @@ Categories=GNOME;Application;Utility;Game;
 `;
 
   try {
-    const homePath = app.getPath("home");
-    let filePath =
-      homePath +
-      "/.local/share/applications/" +
-      message.name.replace(/[^A-Z0-9]+/gi, "_") +
-      ".desktop";
+    const desktopPath = app.getPath("desktop");
+    const filePath = join(
+      desktopPath,
+      `${message.name.replace(/[^A-Z0-9]+/gi, "_")}.desktop`
+    );
 
-    console.log(filePath);
-
+    fs.mkdirSync(desktopPath, { recursive: true });
     fs.writeFileSync(filePath, text, "utf-8");
 
     exec(`chmod +x ${filePath}`, (error, stdout, stderr) => {
