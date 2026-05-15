@@ -45,11 +45,11 @@ ipcMain.on("message", (event, message) => {
 Encoding=UTF-8
 Name=${message.name}
 Comment=${message.comment}
-Exec=${message.exec}
+Exec=wine "${message.exec}"
 Icon=${message.icon}
 Terminal=${message.terminal}
 Type=Application
-Categories=GNOME;Application;Utility;
+Categories=GNOME;Application;Utility;Game;
 `;
 
   try {
@@ -78,4 +78,46 @@ Categories=GNOME;Application;Utility;
   } catch (e) {
     alert("Failed to save the file !");
   }
+});
+
+ipcMain.on("install-wine", (event, distro) => {
+  let command;
+
+  switch (distro) {
+    case "ubuntu-debian":
+      command = "sudo apt update && sudo apt install -y wine wine64 wine32";
+      break;
+    case "arch":
+      command = "sudo pacman -Sy --noconfirm wine";
+      break;
+    case "redhat":
+      command = "sudo dnf install -y wine";
+      break;
+    default:
+      command = null;
+  }
+
+  if (!command) {
+    event.sender.send("install-wine-result", {
+      success: false,
+      error: "Unsupported distro family.",
+    });
+    return;
+  }
+
+  exec(command, { shell: "/bin/bash" }, (error, stdout, stderr) => {
+    if (error) {
+      event.sender.send("install-wine-result", {
+        success: false,
+        error: error.message,
+        stderr,
+      });
+      return;
+    }
+
+    event.sender.send("install-wine-result", {
+      success: true,
+      stdout,
+    });
+  });
 });

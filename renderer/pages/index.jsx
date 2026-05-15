@@ -13,6 +13,8 @@ const Home = () => {
   const [customExec, setCustomExec] = useState(false);
   const [terminal, setTerminal] = useState(false);
   const [error, setError] = useState(false);
+  const [showWineInstaller, setShowWineInstaller] = useState(false);
+  const [installingWine, setInstallingWine] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [version, setVersion] = useState("");
   const [input, setInput] = useState({
@@ -66,6 +68,27 @@ const Home = () => {
       alert("Shortcut Successfully Created!");
     }
   };
+
+  const installWine = () => {
+    setShowWineInstaller(true);
+  };
+
+  const chooseWineDistro = (distro) => {
+    setShowWineInstaller(false);
+    setInstallingWine(true);
+    window.electron.installWine(distro);
+  };
+
+  useEffect(() => {
+    window.electron.onInstallResult((result) => {
+      setInstallingWine(false);
+      if (result.success) {
+        alert("Wine install command finished successfully.");
+      } else {
+        alert(`Wine installation failed: ${result.error || result.stderr || "unknown error"}`);
+      }
+    });
+  }, []);
 
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-slate-50 dark:bg-gray-800">
@@ -284,11 +307,55 @@ const Home = () => {
             }
           }}
         />
+       {/* Install Wine button */}
+        <button type="button" onClick={installWine}>
+          {installingWine ? "Installing Wine..." : "Install Wine"}
+        </button>
 
         {/* Submit Button */}
         <button type="submit">Submit</button>
       </form>
 
+      {showWineInstaller && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 dark:text-slate-100">
+            <h2 className="mb-4 text-lg font-semibold">Choose your distro family</h2>
+            <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">
+              Select the Linux family so Wine installs with the correct package manager.
+            </p>
+            <div className="space-y-3">
+              <button
+                type="button"
+                className="w-full rounded-xl bg-slate-200 px-4 py-3 text-left hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700"
+                onClick={() => chooseWineDistro("ubuntu-debian")}
+              >
+                Ubuntu / Debian
+              </button>
+              <button
+                type="button"
+                className="w-full rounded-xl bg-slate-200 px-4 py-3 text-left hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700"
+                onClick={() => chooseWineDistro("arch")}
+              >
+                Arch Linux
+              </button>
+              <button
+                type="button"
+                className="w-full rounded-xl bg-slate-200 px-4 py-3 text-left hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700"
+                onClick={() => chooseWineDistro("redhat")}
+              >
+                Red Hat / Fedora
+              </button>
+            </div>
+            <button
+              type="button"
+              className="mt-5 w-full rounded-xl bg-red-400 px-4 py-3 text-white hover:bg-red-500"
+              onClick={() => setShowWineInstaller(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       <p className="absolute bottom-0 text-slate-200 dark:text-slate-700">
         v{version}
       </p>
