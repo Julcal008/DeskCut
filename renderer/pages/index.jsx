@@ -103,10 +103,10 @@ const Home = () => {
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-slate-50 dark:bg-gray-800">
       {/* Heading */}
-      <h1 className="pt-5 text-2xl font-bold text-slate-600 dark:text-slate-100">
+      <h1 className="pt-5 text-4xl font-bold tracking-tight text-slate-600 dark:text-slate-100">
         ExesDeskCut
       </h1>
-      <p className="pb-2 text-sm leading-tight text-slate-400">
+      <p className="pb-2 text-base leading-tight text-slate-400">
         Shortcut Creator
       </p>
 

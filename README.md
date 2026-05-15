@@ -12,4 +12,4 @@ This lets you add a portable program to your search and system menus with a few 
 At the moment im starting the project so nothing is ready yet, this is a fork that i want to make for educational porpuses, so don´t expect a lot. I will be making changes to the project to make it easy for everyone for having their windows apps on their desktops. I'm starting this project because i have some apps and games installed on portable folders and i can't access to them on my desktop and i can't change their icons so i want to make it easy, thanks for reading
 
 
-
+At the moment few apps are working but others are not, so for now it's a lucky thing, you can test it out but not expect much, for now.
