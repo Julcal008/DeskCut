@@ -16,6 +16,7 @@ const Home = () => {
   const [error, setError] = useState(false);
   const [showWineInstaller, setShowWineInstaller] = useState(false);
   const [installingWine, setInstallingWine] = useState(false);
+  const [openingWineCfg, setOpeningWineCfg] = useState(false);
   const [provideSudoPassword, setProvideSudoPassword] = useState(false);
   const [sudoPassword, setSudoPassword] = useState("");
   const [darkMode, setDarkMode] = useState(false);
@@ -98,10 +99,19 @@ const Home = () => {
         alert(`Wine installation failed: ${result.error || result.stderr || "unknown error"}`);
       }
     });
+
+    window.electron.onOpenWineCfgResult((result) => {
+      setOpeningWineCfg(false);
+      if (result.success) {
+        alert("Opened Wine configuration (winecfg).");
+      } else {
+        alert(`Failed to open winecfg: ${result.error || "unknown error"}`);
+      }
+    });
   }, []);
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center bg-slate-50 dark:bg-gray-800">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 dark:bg-gray-800">
       {/* Heading */}
       <h1 className="pt-5 text-4xl font-bold tracking-tight text-slate-600 dark:text-slate-100">
         ExesDeskCut
@@ -358,9 +368,20 @@ const Home = () => {
           }}
         />
        {/* Install Wine button */}
-        <button type="button" onClick={installWine}>
-          {installingWine ? "Installing Wine..." : "Install Wine"}
-        </button>
+        <div className="flex flex-col gap-2">
+          <button type="button" onClick={installWine}>
+            {installingWine ? "Installing Wine..." : "Install Wine"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOpeningWineCfg(true);
+              window.electron.openWineCfg();
+            }}
+          >
+            {openingWineCfg ? "Opening Wine settings..." : "Edit Wine Settings"}
+          </button>
+        </div>
 
         {/* Submit Button */}
         <button type="submit">Submit</button>
@@ -425,7 +446,7 @@ const Home = () => {
           </div>
         </div>
       )}
-      <p className="absolute bottom-0 text-slate-200 dark:text-slate-700">
+      <p className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 text-sm text-slate-600 dark:text-slate-300">
         v{version}
       </p>
     </div>

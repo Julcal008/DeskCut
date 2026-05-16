@@ -44,8 +44,10 @@ app.on("ready", async () => {
   await prepareNext("./renderer");
 
   const mainWindow = new BrowserWindow({
-    width: 400,
-    height: 750,
+    width: 520,
+    height: 820,
+    minWidth: 520,
+    minHeight: 600,
     webPreferences: {
       autoHideMenuBar: true,
       nodeIntegration: false,
@@ -61,7 +63,7 @@ app.on("ready", async () => {
       });
 
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.setResizable(false);
+  mainWindow.setResizable(true);
   mainWindow.loadURL(url);
 });
 
@@ -236,5 +238,23 @@ ipcMain.on("install-wine", (event, payload) => {
         stdout,
       });
     });
+  }
+});
+
+// Open winecfg to allow users to edit Wine settings
+ipcMain.on("open-winecfg", (event) => {
+  try {
+    // spawn winecfg as a detached process so it keeps running independently
+    const child = spawn("winecfg", [], {
+      detached: true,
+      stdio: "ignore",
+    });
+
+    // detach so the child keeps running after the app exits
+    child.unref();
+
+    event.sender.send("open-winecfg-result", { success: true });
+  } catch (err) {
+    event.sender.send("open-winecfg-result", { success: false, error: err.message });
   }
 });
